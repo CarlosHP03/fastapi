@@ -8,7 +8,7 @@ from .config import settings
 settings.DATABASE_USERNAME
 
 # Sqlalchemy to run the create statement to run tables
-# models.Base.metadata.create_all(bind=engine)
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
