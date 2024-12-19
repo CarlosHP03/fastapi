@@ -1,6 +1,6 @@
 services:
   api:
-    build: .
+    image: # name of the repository on dockerhub
     depends_on:
       - postgres
     ports: 
