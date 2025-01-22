@@ -6,6 +6,7 @@ from app.oauth2 import create_access_token
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import pytest
+from app import models
 
 
 SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.DATABASE_USERNAME}:{settings.DATABASE_PASSWORD}@{settings.DATABASE_HOSTNAME}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}_test'
@@ -49,6 +50,20 @@ def test_user(client):
     return new_user
 
 @pytest.fixture
+def test_user2(client):
+    user_data = {"email": "lucy@gmail.com",
+                 "password": "123"}
+    
+    res = client.post("/users/", json=user_data)
+
+    new_user = res.json()
+    new_user['password'] = user_data['password']
+
+    assert res.status_code == 201
+
+    return new_user
+
+@pytest.fixture
 def token(test_user):
     return create_access_token({"user_id": test_user['id']})
 
@@ -60,3 +75,36 @@ def authorized_client(client, token):
     }
 
     return client
+
+@pytest.fixture
+def test_posts(test_user, test_user2, session):
+    posts_data = [{
+    "title": "France",
+    "content": "Je mange un croissant",
+    "user_id": test_user['id']
+    }, {
+    "title": "Barcelona",
+    "content": "Viendo al Barca golear",
+    "user_id": test_user['id']
+    }, {
+    "title": "Lausanne",
+    "content": "C'est la vie",
+    "user_id": test_user['id']
+    },
+    {
+    "title": "Geneve",
+    "content": "Je mange un eclair",
+    "user_id": test_user2['id']
+    }]
+
+    def creat_post_model(post):
+        return models.Post(**post)
+    
+    post_map = map(creat_post_model, posts_data)
+    posts = list(post_map)
+
+    session.add_all(posts)
+    session.commit()
+    posts = session.query(models.Post).all()
+
+    return posts
